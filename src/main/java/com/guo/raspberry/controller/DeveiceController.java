@@ -2,6 +2,7 @@ package com.guo.raspberry.controller;
 
 import com.guo.raspberry.bean.DeviceInfo;
 import com.guo.raspberry.util.CommonUtil;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,25 +30,38 @@ public class DeveiceController {
     @RequestMapping("/getInfo")
     public DeviceInfo getInfo() throws IOException {
         String tempResult = CommonUtil.exeCmd(TEMP);
+        tempResult = tempResult.replaceAll("temp=", "").replaceAll("", "'C\\n");
 
         String ramResult = CommonUtil.exeCmd(RAM);
-        String[] ramResultArray = ramResult.split(" ");
-        Integer total = Integer.parseInt(ramResultArray[8].trim());
-        Integer used = Integer.parseInt(ramResultArray[9].trim());
-        Integer free = Integer.parseInt(ramResultArray[10].trim());
+        String[] ramResultArray = ramResult.trim().split("\\s+");
+        Integer totalRam = Integer.parseInt(ramResultArray[8].trim());
+        Integer usedRam = Integer.parseInt(ramResultArray[9].trim());
+        Integer freeRam = Integer.parseInt(ramResultArray[10].trim());
 
         String cpuResult = CommonUtil.exeCmd(CPU);
         String diskResult = CommonUtil.exeCmd(DISK);
 
         DeviceInfo deviceInfo = new DeviceInfo();
         deviceInfo.setTemp(tempResult);
-        deviceInfo.setTotalRam(total / 1000 + " MB");
-        deviceInfo.setUsedRam(used / 1000 + " MB");
-        deviceInfo.setFreeRam(free / 1000 + " MB");
+        deviceInfo.setTotalRam(totalRam / 1000 + " MB");
+        deviceInfo.setUsedRam(usedRam / 1000 + " MB");
+        deviceInfo.setFreeRam(freeRam / 1000 + " MB");
 
         deviceInfo.setCpu(cpuResult);
 
+        String[] diskResultArray = diskResult.trim().split("\\s+");
+        deviceInfo.setTotalDisk(diskResultArray[7]);
+        deviceInfo.setUsedDisk(diskResultArray[8]);
+        deviceInfo.setFreeDisk(diskResultArray[9]);
+        deviceInfo.setPreDisk(diskResultArray[10]);
+
         return deviceInfo;
+    }
+
+    @RequestMapping("/test")
+    public String test(String cmd) throws IOException {
+        String result = CommonUtil.exeCmd(CPU);
+        return result;
     }
 
     @RequestMapping("/cmd")
